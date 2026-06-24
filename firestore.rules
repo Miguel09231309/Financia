@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Global Safety Net - default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY PRIMITIVES ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- TRANSACTION VALIDATION SCHEMAS ---
+    function isValidTransaction(data) {
+      return data.id is string
+        && data.id.size() <= 128
+        && data.userId is string
+        && data.userId.size() <= 128
+        && data.tipo is string
+        && (data.tipo == 'DESPESA' || data.tipo == 'RECEITA')
+        && (data.valor is int || data.valor is float)
+        && data.valor > 0
+        && data.recebedor is string
+        && data.recebedor.size() <= 256
+        && data.categoria is string
+        && data.categoria.size() <= 128
+        && data.dataConfirmacao is int
+        && (!('observacoes' in data) || (data.observacoes is string && data.observacoes.size() <= 1020));
+    }
+
+    // Logged in user owns the transactions path
+    match /transactions/{transactionId} {
+      allow get, list: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn()
+        && isEmailVerified()
+        && isValidId(transactionId)
+        && isValidTransaction(request.resource.data)
+        && request.resource.data.userId == request.auth.uid;
+
+      allow update: if isSignedIn()
+        && isEmailVerified()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid
+        && isValidTransaction(request.resource.data)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.dataConfirmacao == resource.data.dataConfirmacao;
+
+      allow delete: if isSignedIn()
+        && isEmailVerified()
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+}

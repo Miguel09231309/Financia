@@ -1,0 +1,6 @@
+{
+  "name": "Financia",
+  "description": "Plataforma de controle e conciliação de receitas e despesas com sincronização na nuvem.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,54 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Uma transação financeira de receita ou despesa de um usuário.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "tipo": {
+          "type": "string",
+          "enum": [
+            "DESPESA",
+            "RECEITA"
+          ]
+        },
+        "valor": {
+          "type": "number"
+        },
+        "recebedor": {
+          "type": "string"
+        },
+        "categoria": {
+          "type": "string"
+        },
+        "dataConfirmacao": {
+          "type": "number"
+        },
+        "observacoes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "tipo",
+        "valor",
+        "recebedor",
+        "categoria",
+        "dataConfirmacao"
+      ]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Lista unificada de lançamentos adicionados pelo usuário."
+    }
+  }
+}
