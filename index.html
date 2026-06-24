@@ -1,12 +1,1016 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Financia - Controle Financeiro</title>
-  </head>
-  <body class="bg-slate-50 text-slate-800 min-h-screen">
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Financia - Gestão Financeira Consolidada</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS Play CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Tailwind Configuration -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Space Grotesk', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Premium custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animated entry keyframes */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 font-sans flex flex-col selection:bg-indigo-600 selection:text-white">
+
+  <!-- Main Top Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-sm select-none">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-17 py-3 flex items-center justify-between">
+      
+      <!-- Logo Brand -->
+      <div class="flex items-center gap-2.5">
+        <div class="relative flex items-center justify-center w-10 h-10 bg-indigo-600 rounded-xl shadow-xs text-white">
+          <i data-lucide="coins" class="w-5.5 h-5.5"></i>
+          <span class="absolute -top-1 -right-1 w-4.5 h-4.5 bg-emerald-500 rounded-full border-2 border-white text-white flex items-center justify-center">
+            <i data-lucide="check" class="w-2.5 h-2.5"></i>
+          </span>
+        </div>
+        <div>
+          <span class="font-display font-extrabold text-base text-slate-900 tracking-tight block">Financia</span>
+          <span class="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider">Gestão Financeira Consolidada</span>
+        </div>
+      </div>
+
+      <!-- Connection Status & Backup controls -->
+      <div class="flex items-center gap-3">
+        <!-- Export / Import buttons -->
+        <div class="hidden md:flex items-center gap-2">
+          <button 
+            onclick="exportBackup()" 
+            class="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition text-xs font-semibold cursor-pointer"
+            title="Salvar seus dados locais em um arquivo JSON"
+          >
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Exportar JSON</span>
+          </button>
+          
+          <button 
+            onclick="triggerImport()" 
+            class="flex items-center gap-1.5 px-3 py-1.5 text-slate-600 hover:text-indigo-600 hover:bg-slate-50 border border-slate-200 rounded-xl transition text-xs font-semibold cursor-pointer"
+            title="Carregar dados de um arquivo de backup JSON"
+          >
+            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+            <span>Importar JSON</span>
+          </button>
+          <input type="file" id="importFile" class="hidden" accept=".json" onchange="importBackup(event)">
+        </div>
+
+        <span class="text-[11px] font-semibold border bg-amber-50 border-amber-250 text-amber-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5 font-mono">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <span>MODO PORTÁTIL / OFFLINE</span>
+        </span>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+    
+    <div class="space-y-6">
+      
+      <!-- Visual Intro Banner -->
+      <div class="bg-slate-900 rounded-3xl p-6 text-white relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-md border border-slate-800 animate-fade-in">
+        
+        <!-- Background ambient mesh -->
+        <div class="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-3xl pointer-events-none select-none"></div>
+        
+        <div class="space-y-1.5 relative z-10 max-w-xl">
+          <span class="inline-flex items-center gap-1 bg-indigo-500/10 text-indigo-300 border border-indigo-400/20 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
+            Controle de Gastos & Receitas
+          </span>
+          <h2 class="font-display font-extrabold text-2xl leading-none tracking-tight flex items-center gap-2">
+            Painel Consolidado Financia
+            <i data-lucide="sparkles" class="w-5 h-5 text-indigo-300 animate-pulse"></i>
+          </h2>
+          <p class="text-xs text-slate-300 leading-relaxed font-sans max-w-lg">
+            Bem-vindo ao seu gestor pessoal! Todo o controle financeiro roda diretamente no seu navegador de forma 100% privada e instantânea, salvando o progresso automaticamente no seu armazenamento local (<code class="font-mono bg-slate-800 text-indigo-300 px-1 py-0.5 rounded">localStorage</code>).
+          </p>
+        </div>
+
+        <!-- Quick actions for testing / reset -->
+        <div class="flex gap-2.5 shrink-0 z-10">
+          <button
+            type="button"
+            onclick="resetDemoData()"
+            class="px-4 py-2.5 bg-white hover:bg-slate-100 rounded-xl text-xs font-bold tracking-wide flex items-center gap-1.5 transition text-slate-900 shadow-sm cursor-pointer"
+            title="Restaura os dados padrões da demonstração comercial"
+          >
+            <i data-lucide="refresh-cw" id="reset-spinner" class="w-3.5 h-3.5"></i>
+            Restaurar Demo
+          </button>
+        </div>
+      </div>
+
+      <!-- Informational Mobile backup helper -->
+      <div class="md:hidden p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex flex-col gap-3 shadow-sm">
+        <div class="flex gap-3">
+          <div class="p-3 bg-indigo-100 text-indigo-600 rounded-xl shrink-0 h-fit">
+            <i data-lucide="folder-lock" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h4 class="font-display font-bold text-slate-800 text-xs">Proteja seus dados!</h4>
+            <p class="text-[11px] text-slate-500 mt-1">Como este aplicativo roda diretamente no navegador, você pode salvar cópias de segurança de seus lançamentos exportando seu backup local.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="exportBackup()" class="py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold text-center">Exportar JSON</button>
+          <button onclick="triggerImport()" class="py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold text-center">Importar JSON</button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Total Receitas -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-all hover:shadow-md">
+          <div>
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Receitas Consolidadas</span>
+            <h3 id="metric-receitas" class="font-display font-bold text-2xl text-emerald-600 mt-1 select-all">
+              R$ 0,00
+            </h3>
+            <span class="text-[10px] text-slate-400 mt-1 block">Rendas, aportes e PIX recebidos</span>
+          </div>
+          <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
+            <i data-lucide="arrow-up-right" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <!-- Total Despesas -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-all hover:shadow-md">
+          <div>
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Despesas Consolidadas</span>
+            <h3 id="metric-despesas" class="font-display font-bold text-2xl text-rose-600 mt-1 select-all">
+              R$ 0,00
+            </h3>
+            <span class="text-[10px] text-slate-400 mt-1 block">Compras, assinaturas e despesas ativas</span>
+          </div>
+          <div class="p-3 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+            <i data-lucide="arrow-down-right" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <!-- Saldo Líquido -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between transition-all hover:shadow-md">
+          <div>
+            <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Saldo Consolidado</span>
+            <h3 id="metric-saldo" class="font-display font-bold text-2xl text-indigo-600 mt-1 select-all">
+              R$ 0,00
+            </h3>
+            <span class="text-[10px] text-slate-400 mt-1 block">Balanço total das transações válidas</span>
+          </div>
+          <div id="metric-saldo-icon-container" class="p-3 bg-indigo-50 text-indigo-600 rounded-xl shrink-0">
+            <i data-lucide="wallet" class="w-6 h-6"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Grid Row -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+        
+        <!-- Left Column: Chart & History Logs -->
+        <div class="xl:col-span-7 space-y-6">
+          
+          <!-- Visual Charts section -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-md">
+            <div class="flex items-center justify-between mb-4 pb-2 border-b border-slate-100">
+              <div>
+                <h4 class="font-display font-bold text-slate-800 text-sm">Distribuição de Categorias</h4>
+                <p class="text-[11px] text-slate-500 font-medium">Divisão proporcional agregada das despesas</p>
+              </div>
+              <button
+                type="button"
+                onclick="resetDemoData()"
+                class="p-1.5 hover:bg-slate-100 rounded-lg text-slate-500 hover:text-slate-700 transition flex items-center gap-1 text-[11px] font-medium"
+                title="Restaurar dados padrões de exemplo"
+              >
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                Resetar Demo
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-6 items-center">
+              <!-- Left side: Doughnut chart -->
+              <div class="sm:col-span-5 h-48 relative flex items-center justify-center">
+                <canvas id="categoryChart" class="max-w-[170px] max-h-[170px] z-10"></canvas>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+                  <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</span>
+                  <span id="chart-total-count" class="text-sm font-bold text-slate-700 font-display">0 itens</span>
+                </div>
+              </div>
+
+              <!-- Right side: Custom styled breakdown progress indicators -->
+              <div class="sm:col-span-7 space-y-2">
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Composição de Gastos</span>
+                <div id="chart-breakdown-list" class="max-h-[160px] overflow-y-auto pr-1 space-y-2">
+                  <!-- Injected via JavaScript -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main list of consolidated records -->
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
+              <div>
+                <h3 class="font-display font-bold text-lg text-slate-800">Histórico Consolidado</h3>
+                <p class="text-xs text-slate-500 font-medium">Acompanhe, filtre e remova lançamentos confirmados</p>
+              </div>
+              <span id="history-badge-count" class="text-xs font-mono text-slate-400 bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-100 font-semibold select-none self-start sm:self-center">
+                0 registros
+              </span>
+            </div>
+
+            <!-- Interactive Filters & Search bar (Great local feature addition!) -->
+            <div class="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-150">
+              <div class="sm:col-span-2 relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                  <i data-lucide="search" class="w-4 h-4"></i>
+                </span>
+                <input 
+                  type="text" 
+                  id="searchFilter" 
+                  oninput="applyFilters()" 
+                  class="w-full text-xs font-medium text-slate-700 bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 focus:outline-none focus:border-indigo-500" 
+                  placeholder="Buscar favorecido, observação..."
+                >
+              </div>
+              <div>
+                <select 
+                  id="typeFilter" 
+                  onchange="applyFilters()" 
+                  class="w-full text-xs font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl px-2.5 py-2 focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="ALL">Todos os Tipos</option>
+                  <option value="RECEITA">Apenas Receitas (+)</option>
+                  <option value="DESPESA">Apenas Despesas (-)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- List view or Empty placeholder container -->
+            <div id="transactions-container" class="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+              <!-- Dynamically rendered items -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Direct manual transaction launch form -->
+        <div class="xl:col-span-5">
+          <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md p-6 sticky top-22">
+            <div class="flex items-center gap-2 mb-4">
+              <div class="p-2 bg-indigo-100 text-indigo-600 rounded-xl">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h3 class="font-display font-bold text-base text-slate-800">Novo Lançamento</h3>
+                <p class="text-xs text-slate-500 font-medium">Adicione uma receita ou despesa manual na sua folha</p>
+              </div>
+            </div>
+
+            <form id="transactionForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+              <!-- Toggle Despesa / Receita -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
+                  Tipo de Registro
+                </label>
+                <div class="grid grid-cols-2 gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                  <button
+                    type="button"
+                    id="btn-despesa"
+                    onclick="setTransactionType('DESPESA')"
+                    class="py-2 px-3 text-center text-xs font-bold rounded-lg transition-all bg-rose-500 text-white shadow-sm"
+                  >
+                    Despesa (-)
+                  </button>
+                  <button
+                    type="button"
+                    id="btn-receita"
+                    onclick="setTransactionType('RECEITA')"
+                    class="py-2 px-3 text-center text-xs font-bold rounded-lg transition-all text-slate-600 hover:bg-slate-200/50"
+                  >
+                    Receita (+)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Currency Val -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
+                  <i data-lucide="dollar-sign" class="w-3.5 h-3.5 text-slate-400"></i>
+                  Valor (R$)
+                </label>
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">R$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    id="form-valor"
+                    class="w-full text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100 font-mono"
+                    placeholder="0,00"
+                    required
+                  >
+                </div>
+              </div>
+
+              <!-- Payee / Origin -->
+              <div>
+                <label id="label-recebedor" class="block text-xs font-semibold text-slate-500 mb-1.5">
+                  Favorecido / Estabelecedor / Origem
+                </label>
+                <input
+                  type="text"
+                  id="form-recebedor"
+                  class="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+                  placeholder="Ex: Padaria, Uber, etc."
+                  required
+                >
+              </div>
+
+              <!-- Category Select -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
+                  <i data-lucide="list-filter" class="w-3.5 h-3.5 text-slate-400"></i>
+                  Categoria
+                </label>
+                <select
+                  id="form-categoria"
+                  class="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-100"
+                  required
+                >
+                  <!-- Injected by JS depending on type selection -->
+                </select>
+              </div>
+
+              <!-- Observations -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-500 mb-1.5 flex items-center gap-1">
+                  <i data-lucide="clipboard" class="w-3.5 h-3.5 text-slate-400"></i>
+                  Observações (Opcional)
+                </label>
+                <input
+                  type="text"
+                  id="form-observacoes"
+                  class="w-full text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-indigo-500"
+                  placeholder="Ex: Compras mensais do escritório, almoço, etc."
+                >
+              </div>
+
+              <!-- Form Messages -->
+              <div id="form-error" class="hidden p-3 bg-red-50 text-red-700 rounded-xl text-xs flex items-center gap-1.5">
+                <i data-lucide="alert-circle" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span id="form-error-msg">Ocorreu um erro no lançamento.</span>
+              </div>
+
+              <div id="form-success" class="hidden p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-1.5 border border-emerald-100">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500 shrink-0"></i>
+                <span>Lançamento registrado com sucesso no painel!</span>
+              </div>
+
+              <!-- Submit button -->
+              <button
+                type="submit"
+                id="form-submit"
+                class="w-full font-bold py-3 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm text-white bg-rose-500 hover:bg-rose-600 cursor-pointer"
+              >
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                <span>Gravar no Saldo Consolidado</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200/60 py-6 mt-auto">
+    <div class="max-w-7xl mx-auto px-4 text-center select-none space-y-1">
+      <p class="text-xs text-slate-500 font-medium">
+        Financia - Sistema Simplificado de Controle e Conciliação Financeira
+      </p>
+      <p class="text-[10px] text-slate-400 font-mono">
+        Projetado para portabilidade total e persistência local segura. Licença Apache-2.0.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Application Logic JS -->
+  <script>
+    // 1. App State
+    let transactions = [];
+    let activeType = 'DESPESA'; // 'DESPESA' or 'RECEITA'
+    let myChartInstance = null;
+
+    // Categories catalog
+    const CATEGORIES_CATALOG = {
+      DESPESA: [
+        'Alimentação',
+        'Transporte',
+        'Saúde',
+        'Lazer & Viagens',
+        'Assinaturas & Serviços',
+        'Contas & Utilidades',
+        'Supermercado',
+        'Educação',
+        'Moradia',
+        'Impostos & Taxas',
+        'Outros'
+      ],
+      RECEITA: [
+        'Salário & Proventos',
+        'Freelance',
+        'Investimentos',
+        'Vendas',
+        'Reembolsos',
+        'Transferência Recebida',
+        'Outros'
+      ]
+    };
+
+    // Category Chart Colors palette
+    const CHART_COLORS = ['#830AD1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#64748b', '#ec4899', '#06b6d4', '#84cc16', '#a855f7'];
+
+    // 2. Demo fallback data
+    const DEMO_TRANSACTIONS = [
+      {
+        id: "trans-demo-1",
+        tipo: "RECEITA",
+        valor: 8500.00,
+        recebedor: "Empresa Tecnologia S.A.",
+        categoria: "Salário & Proventos",
+        dataConfirmacao: Date.now() - 3600000 * 24 * 3,
+        observacoes: "Salário líquido mensal"
+      },
+      {
+        id: "trans-demo-2",
+        tipo: "RECEITA",
+        valor: 450.00,
+        recebedor: "Maria Souza",
+        categoria: "Investimentos",
+        dataConfirmacao: Date.now() - 3600000 * 24 * 1,
+        observacoes: "Rendimento de Dividendos FII"
+      },
+      {
+        id: "trans-demo-3",
+        tipo: "DESPESA",
+        valor: 189.90,
+        recebedor: "Supermercado DB",
+        categoria: "Supermercado",
+        dataConfirmacao: Date.now() - 3600000 * 12,
+        observacoes: "Compras de alimentação da semana"
+      },
+      {
+        id: "trans-demo-4",
+        tipo: "DESPESA",
+        valor: 120.00,
+        recebedor: "Posto Curitiba",
+        categoria: "Transporte",
+        dataConfirmacao: Date.now() - 3600000 * 6,
+        observacoes: "Combustível viagem comercial"
+      },
+      {
+        id: "trans-demo-5",
+        tipo: "DESPESA",
+        valor: 34.90,
+        recebedor: "Netflix Entretenimento",
+        categoria: "Assinaturas & Serviços",
+        dataConfirmacao: Date.now() - 3600000 * 2,
+        observacoes: "Assinatura mensal"
+      },
+      {
+        id: "trans-demo-6",
+        tipo: "DESPESA",
+        valor: 15.00,
+        recebedor: "Padaria Arapongas",
+        categoria: "Alimentação",
+        dataConfirmacao: Date.now() - 3600000 * 1,
+        observacoes: "Pão de sal e café"
+      }
+    ];
+
+    // Helper: format number to BRL Currency
+    function formatBRL(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value);
+    }
+
+    // Helper: format timestamp to readable string
+    function formatTime(timestamp) {
+      const d = new Date(timestamp);
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // 3. Life cycle bootloader
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTransactions();
+      updateCategorySelectOptions();
+      renderApp();
+    });
+
+    // Load list from local storage or pre-populate with demo data
+    function loadTransactions() {
+      const stored = localStorage.getItem('finfin_local_transactions');
+      if (stored) {
+        try {
+          transactions = JSON.parse(stored);
+        } catch (e) {
+          transactions = [...DEMO_TRANSACTIONS];
+        }
+      } else {
+        transactions = [...DEMO_TRANSACTIONS];
+        saveTransactions();
+      }
+    }
+
+    function saveTransactions() {
+      localStorage.setItem('finfin_local_transactions', JSON.stringify(transactions));
+    }
+
+    // Reset current state with demo metrics
+    function resetDemoData() {
+      const resetSpinner = document.getElementById('reset-spinner');
+      if (resetSpinner) resetSpinner.classList.add('animate-spin');
+      
+      setTimeout(() => {
+        transactions = JSON.parse(JSON.stringify(DEMO_TRANSACTIONS)); // Deep copy
+        // Advance timestamps relative to now
+        const now = Date.now();
+        transactions[0].dataConfirmacao = now - 3600000 * 24 * 3;
+        transactions[1].dataConfirmacao = now - 3600000 * 24 * 1;
+        transactions[2].dataConfirmacao = now - 3600000 * 12;
+        transactions[3].dataConfirmacao = now - 3600000 * 6;
+        transactions[4].dataConfirmacao = now - 3600000 * 2;
+        transactions[5].dataConfirmacao = now - 3600000 * 1;
+
+        saveTransactions();
+        renderApp();
+        if (resetSpinner) resetSpinner.classList.remove('animate-spin');
+      }, 500);
+    }
+
+    // 4. Interface render router engine
+    function renderApp() {
+      renderMetrics();
+      renderChartAndBreakdown();
+      applyFilters(); // will render list based on active filters
+      lucide.createIcons();
+    }
+
+    // Recalculates metrics and updates top status cards
+    function renderMetrics() {
+      const totalReceitas = transactions
+        .filter(t => t.tipo === 'RECEITA')
+        .reduce((sum, t) => sum + Number(t.valor), 0);
+
+      const totalDespesas = transactions
+        .filter(t => t.tipo === 'DESPESA')
+        .reduce((sum, t) => sum + Number(t.valor), 0);
+
+      const saldo = totalReceitas - totalDespesas;
+
+      // Update textual nodes
+      document.getElementById('metric-receitas').innerText = formatBRL(totalReceitas);
+      document.getElementById('metric-despesas').innerText = formatBRL(totalDespesas);
+      
+      const saldoNode = document.getElementById('metric-saldo');
+      saldoNode.innerText = formatBRL(saldo);
+
+      // Dyn coloring balance card
+      const iconContainer = document.getElementById('metric-saldo-icon-container');
+      if (saldo >= 0) {
+        saldoNode.className = 'font-display font-bold text-2xl text-indigo-600 mt-1 select-all';
+        iconContainer.className = 'p-3 bg-indigo-50 text-indigo-600 rounded-xl shrink-0';
+      } else {
+        saldoNode.className = 'font-display font-bold text-2xl text-amber-600 mt-1 select-all';
+        iconContainer.className = 'p-3 bg-amber-50 text-amber-600 rounded-xl shrink-0';
+      }
+    }
+
+    // Updates chart rendering and breakdown listings side metrics
+    function renderChartAndBreakdown() {
+      // Collect expense dynamic grouped values
+      const categoryMap = {};
+      const expensesOnly = transactions.filter(t => t.tipo === 'DESPESA');
+
+      expensesOnly.forEach(t => {
+        const cat = t.categoria || 'Outros';
+        categoryMap[cat] = (categoryMap[cat] || 0) + Number(t.valor);
+      });
+
+      const pieData = Object.keys(categoryMap).map(name => ({
+        name,
+        value: Number(categoryMap[name].toFixed(2))
+      })).sort((a, b) => b.value - a.value);
+
+      // Render chart center count
+      document.getElementById('chart-total-count').innerText = `${expensesOnly.length} despesa${expensesOnly.length === 1 ? '' : 's'}`;
+
+      // 1. Populate custom details breakdown layout list on the right
+      const breakdownContainer = document.getElementById('chart-breakdown-list');
+      breakdownContainer.innerHTML = '';
+
+      if (pieData.length === 0) {
+        breakdownContainer.innerHTML = `
+          <div class="text-slate-400 text-[11px] py-8 text-center italic bg-slate-50 rounded-xl">
+            Insira um lançamento de despesa para visualizar a análise por categorias!
+          </div>
+        `;
+      } else {
+        pieData.forEach((item, index) => {
+          const color = CHART_COLORS[index % CHART_COLORS.length];
+          const div = document.createElement('div');
+          div.className = 'flex items-center justify-between text-xs text-slate-600 pb-1.5 border-b border-dashed border-slate-100 last:border-0';
+          div.innerHTML = `
+            <div class="flex items-center gap-2 truncate">
+              <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${color}"></span>
+              <span class="truncate font-semibold text-slate-700">${item.name}</span>
+            </div>
+            <span class="font-mono text-slate-800 font-bold shrink-0">${formatBRL(item.value)}</span>
+          `;
+          breakdownContainer.appendChild(div);
+        });
+      }
+
+      // 2. Instantiate or redraw Chart.js doughnut
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      if (myChartInstance) {
+        myChartInstance.destroy();
+      }
+
+      if (pieData.length === 0) {
+        // Draw empty fallback state in Chart
+        myChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Nenhum lançamento'],
+            datasets: [{
+              data: [1],
+              backgroundColor: ['#f1f5f9'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            cutout: '75%',
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false }
+            }
+          }
+        });
+      } else {
+        myChartInstance = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: pieData.map(d => d.name),
+            datasets: [{
+              data: pieData.map(d => d.value),
+              backgroundColor: CHART_COLORS.slice(0, pieData.length),
+              borderWidth: 2,
+              borderColor: '#ffffff',
+              hoverOffset: 4
+            }]
+          },
+          options: {
+            cutout: '75%',
+            responsive: true,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#0f172a',
+                padding: 10,
+                titleFont: { size: 11, family: 'Inter' },
+                bodyFont: { size: 11, family: 'Inter', weight: 'bold' },
+                callbacks: {
+                  label: function(context) {
+                    return ` ${context.label}: ${formatBRL(context.raw)}`;
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Renders list based on filter query
+    function applyFilters() {
+      const searchVal = document.getElementById('searchFilter').value.toLowerCase().trim();
+      const typeVal = document.getElementById('typeFilter').value;
+
+      const filtered = transactions.filter(t => {
+        const matchesSearch = !searchVal || 
+          t.recebedor.toLowerCase().includes(searchVal) || 
+          t.categoria.toLowerCase().includes(searchVal) || 
+          (t.observacoes && t.observacoes.toLowerCase().includes(searchVal));
+
+        const matchesType = typeVal === 'ALL' || t.tipo === typeVal;
+
+        return matchesSearch && matchesType;
+      });
+
+      // Update badge label record
+      document.getElementById('history-badge-count').innerText = `${filtered.length} registro${filtered.length === 1 ? '' : 's'}`;
+
+      const historyContainer = document.getElementById('transactions-container');
+      historyContainer.innerHTML = '';
+
+      if (filtered.length === 0) {
+        historyContainer.innerHTML = `
+          <div class="py-12 text-center bg-slate-50 border border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center">
+            <i data-lucide="calendar" class="w-8 h-8 text-slate-350 mb-2"></i>
+            <h4 class="font-display font-semibold text-slate-600 text-xs">Nenhum Registro Encontrado</h4>
+            <p class="text-[11px] text-slate-400 max-w-[240px] mt-1 leading-normal text-center">
+              Tente reajustar seus filtros de busca ou faça novos lançamentos no formulário de inclusão.
+            </p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      filtered.forEach(trans => {
+        const isDespesa = trans.tipo === 'DESPESA';
+        const card = document.createElement('div');
+        card.className = 'p-3.5 bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4 transition group animate-fade-in';
+        
+        let obsLine = '';
+        if (trans.observacoes) {
+          obsLine = `
+            <span>•</span>
+            <span class="truncate italic max-w-[140px] sm:max-w-[260px]" title="${trans.observacoes}">
+              Obs: "${trans.observacoes}"
+            </span>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <!-- Indicator icon -->
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+              isDespesa ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'
+            }">
+              <i data-lucide="${isDespesa ? 'trending-down' : 'trending-up'}" class="w-5 h-5"></i>
+            </div>
+
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs font-bold text-slate-700 truncate">${trans.recebedor}</span>
+                <span class="text-[10px] px-2 py-0.5 bg-slate-200/70 text-slate-600 rounded-full font-medium">
+                  ${trans.categoria}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mt-1">
+                <span class="font-medium">${formatTime(trans.dataConfirmacao)}</span>
+                ${obsLine}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 shrink-0">
+            <span class="text-xs font-bold font-mono ${isDespesa ? 'text-rose-600' : 'text-emerald-600'}">
+              ${isDespesa ? '-' : '+'} ${formatBRL(trans.valor)}
+            </span>
+
+            <button
+              type="button"
+              onclick="deleteTransaction('${trans.id}')"
+              class="p-1.5 bg-white text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 rounded-lg opacity-80 group-hover:opacity-100 transition cursor-pointer"
+              title="Excluir transação"
+            >
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        `;
+        
+        historyContainer.appendChild(card);
+      });
+
+      lucide.createIcons();
+    }
+
+    // 5. User Form interaction handlers
+    function setTransactionType(type) {
+      activeType = type;
+      const btnDespesa = document.getElementById('btn-despesa');
+      const btnReceita = document.getElementById('btn-receita');
+      const submitBtn = document.getElementById('form-submit');
+      const payeeLabel = document.getElementById('label-recebedor');
+
+      if (type === 'DESPESA') {
+        btnDespesa.className = 'py-2 px-3 text-center text-xs font-bold rounded-lg transition-all bg-rose-500 text-white shadow-sm';
+        btnReceita.className = 'py-2 px-3 text-center text-xs font-bold rounded-lg transition-all text-slate-600 hover:bg-slate-200/50';
+        submitBtn.className = 'w-full font-bold py-3 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm text-white bg-rose-500 hover:bg-rose-600 cursor-pointer';
+        payeeLabel.innerText = 'Favorecido / Estabelecedor / Origem';
+      } else {
+        btnDespesa.className = 'py-2 px-3 text-center text-xs font-bold rounded-lg transition-all text-slate-600 hover:bg-slate-200/50';
+        btnReceita.className = 'py-2 px-3 text-center text-xs font-bold rounded-lg transition-all bg-emerald-500 text-white shadow-sm';
+        submitBtn.className = 'w-full font-bold py-3 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm text-white bg-emerald-500 hover:bg-emerald-600 cursor-pointer';
+        payeeLabel.innerText = 'Recebido de (Pagador / Origem)';
+      }
+
+      updateCategorySelectOptions();
+    }
+
+    // Fill options depending on type
+    function updateCategorySelectOptions() {
+      const selectNode = document.getElementById('form-categoria');
+      selectNode.innerHTML = '';
+
+      const list = CATEGORIES_CATALOG[activeType];
+      list.forEach((cat, index) => {
+        const option = document.createElement('option');
+        option.value = cat;
+        option.innerText = cat;
+        if (index === 0) option.selected = true;
+        selectNode.appendChild(option);
+      });
+    }
+
+    // Register a new manual financial element
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      
+      const valInput = document.getElementById('form-valor');
+      const receiverInput = document.getElementById('form-recebedor');
+      const catInput = document.getElementById('form-categoria');
+      const obsInput = document.getElementById('form-observacoes');
+
+      const numericVal = parseFloat(valInput.value);
+      if (isNaN(numericVal) || numericVal <= 0) {
+        showFormMessage('form-error', 'Insira um valor numérico válido maior que zero.');
+        return;
+      }
+
+      if (!receiverInput.value.trim()) {
+        showFormMessage('form-error', 'Informe o favorecido, recebedor ou estabelecimento.');
+        return;
+      }
+
+      // Safe creation
+      const newTx = {
+        id: `trans-local-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+        tipo: activeType,
+        valor: numericVal,
+        recebedor: receiverInput.value.trim(),
+        categoria: catInput.value,
+        dataConfirmacao: Date.now(),
+        observacoes: obsInput.value.trim() || undefined
+      };
+
+      // Push into state and save
+      transactions.unshift(newTx);
+      saveTransactions();
+
+      // Clear form inputs safely
+      valInput.value = '';
+      receiverInput.value = '';
+      obsInput.value = '';
+
+      // Re-render
+      renderApp();
+
+      // Launch success modal callback
+      showFormMessage('form-success');
+    }
+
+    // Toggle specific helper form messages
+    function showFormMessage(elementId, textContent = '') {
+      const node = document.getElementById(elementId);
+      if (textContent) {
+        document.getElementById(`${elementId}-msg`).innerText = textContent;
+      }
+      node.classList.remove('hidden');
+
+      setTimeout(() => {
+        node.classList.add('hidden');
+      }, 3500);
+    }
+
+    // Remove targeted item
+    function deleteTransaction(id) {
+      if (confirm('Tem certeza de que deseja remover permanentemente este lançamento consolidado?')) {
+        transactions = transactions.filter(t => t.id !== id);
+        saveTransactions();
+        renderApp();
+      }
+    }
+
+    // 6. JSON Export / Import backups (Standalone app essential superpowers)
+    function exportBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `financia-backup-${new Date().toISOString().slice(0,10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerImport() {
+      document.getElementById('importFile').click();
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed)) {
+            // Basic schema sanitization validation
+            const isValid = parsed.every(item => 
+              item.id && 
+              item.tipo && 
+              (item.tipo === 'RECEITA' || item.tipo === 'DESPESA') && 
+              item.valor && 
+              item.recebedor
+            );
+
+            if (isValid) {
+              transactions = parsed;
+              saveTransactions();
+              renderApp();
+              alert('Cópia de backup importada e consolidada com sucesso no seu painel!');
+            } else {
+              alert('Estrutura de arquivo inválida. Certifique-se de que o backup foi gerado pelo Financia.');
+            }
+          } else {
+            alert('Formato de dados incompatível. O arquivo deve conter uma lista de transações.');
+          }
+        } catch (err) {
+          alert('Erro ao interpretar o arquivo JSON. Certifique-se de que é um backup válido.');
+        }
+      };
+      reader.readAsText(file);
+      // Reset input value to allow re-uploading same file if desired
+      event.target.value = '';
+    }
+  </script>
+</body>
 </html>
